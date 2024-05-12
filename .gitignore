@@ -47,3 +47,12 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+
+# Folders
+dump/
+exports/
+
+# Data
+dgapes_v1.csv
+
