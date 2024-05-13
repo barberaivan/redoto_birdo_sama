@@ -360,9 +360,9 @@ sigmas_mat_pred <- X_group_pred %*% sigma_raneff
 
 mu_raw_logit_pred <- X_group_pred %*% ahat +
                      (X_group_pred * pdata$sizediff) %*% bhat
-mu_raw_logitnorm_pred <- logit_norm_mean(mu_raw_logit_pred,
-                                         sigmas_mat_pred)
-saveRDS(mu_raw_logitnorm_pred, "exports/consumption_probability_pred-mu-samples.rds")
+# mu_raw_logitnorm_pred <- logit_norm_mean(mu_raw_logit_pred,
+#                                          sigmas_mat_pred)
+# saveRDS(mu_raw_logitnorm_pred, "exports/consumption_probability_pred-mu-samples.rds")
 mu_raw_logitnorm_pred <- readRDS("exports/consumption_probability_pred-mu-samples.rds")
 
 mu_pred <- mu_raw_logitnorm_pred * (X_group_pred %*% uhat)
@@ -468,3 +468,13 @@ pgt0 <- apply(samples_full, 2, function(x) sum(x > 0) / length(x))
 coef_table <- cbind(summ1[, 1], summ2, pgt0 = pgt0, summ1[, -1])
 write.csv(coef_table, "exports/consumption_probability_table_summary.csv",
           row.names = F)
+
+# Exports for plotting ---------------------------------------------------
+
+plot_list <- list(
+  pdata = pdata,
+  dagg = dagg,
+  dens_data = dens_data,
+  data = dbin
+)
+saveRDS(plot_list, "exports/consumption_probability_plot_list.rds")

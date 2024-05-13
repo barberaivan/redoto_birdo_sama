@@ -1,0 +1,75 @@
+---
+title: |
+  <center> Size matching differentially affects gulpers and mashers frugivorous birds </center>
+  <center> Appendix 1 </center>
+subtitle: "Models specification"
+output: pdf_document
+header-includes:
+   - \usepackage{caption}
+---
+
+The consumption rate model was defined as follows:  
+$$
+\begin{aligned}
+\text{y}_i \sim \ &\text{Gamma}(\text{shape} = \phi_{k[i]}^{-1}, \ \text{rate} = (\phi_{k[i]}\ \mu_i)^{-1}) \\
+\\
+\mu_i = \ &\frac{\kappa_{k[i]}}{1 + \text{exp}(-\eta_i)} \\
+\\
+\eta_i = \ &\alpha_{k[i]} \ + \ \beta_{k[i]} \ \text{sizediff}_i \ +\\
+&\varepsilon_{\text{bird},b[i]} \ +\\
+&\varepsilon_{\text{plant},p[i]} \ +\\ 
+&\varepsilon_{\text{source},s[i]} \\
+\\
+\alpha_k \sim \ &\text{Normal}(0, 3) \\
+\beta_k \sim \ &\text{Normal}(0, 10 \ \text{SD}(\text{sizediff})^{-1}) \\
+\kappa_k \sim \ &\text{Unif}(1, 30) \\
+\\
+\varepsilon_{\text{bird},b} \sim \ &\text{Normal}(0, \sigma_{\text{bird},k[b]}) \\
+\varepsilon_{\text{plant},p} \sim \ &\text{Normal}(0, \sigma_{\text{plant}}) \\
+\varepsilon_{\text{source},s} \sim \ &\text{Normal}(0, \sigma_{\text{source}}) \\
+\\
+\sigma_{\text{bird},k} \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty) \\
+\sigma_{\text{plant}} \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty) \\
+\sigma_{\text{source}} \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty) \\
+\\
+\phi_k \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty).
+\end{aligned}
+$$
+$\text{y}_i$ is the consumption rate corresponding to the foraging behaviour $k[i] \in \{1 = \text{gulper}, 2 = \text{masher}\}$, bird species $b[i]$, plant species $p[i]$, and source study $s[i]$. $\mu_i$ is the mean of the Gamma distribution, $\phi_{k[i]}$ is the dispersion parameter, and the variance is defined as $\text{Var}(\text{Y}_i) = \mu_i^2 \ \phi_{k[i]}$. "sizediff" is the difference between the bill gape width and the fruit diameter (mm). $\varepsilon$ represents random effects for the bird species, plant species, and source. Note that $\alpha, \beta, \kappa, \phi,\ \text{and}\  \sigma_{\text{bird}}$ vary between mashers and gulpers, indicated by the $k$ suffix. Normal distributions are parameterised with mean and standard deviation, and T(,) indicates the lower and upper bound for truncated distributions.  
+  
+The model for consumption probability was very similar, assuming a Bernoulli distribution of the response and not including the source random effect:
+$$
+\begin{aligned}
+\text{y}_i \sim \ &\text{Bernoulli}(\text{p}_i) \\
+\\
+\text{p}_i = \ &\frac{\kappa_{k[i]}}{1 + \text{exp}(-\eta_i)} \\
+\\
+\eta_i = \ &\alpha_{k[i]} \ + \ \beta_{k[i]} \ \text{sizediff}_i \ +\\
+&\varepsilon_{\text{bird},b[i]} \ +\\
+&\varepsilon_{\text{plant},p[i]} \\ 
+\\
+\alpha_k \sim \ &\text{Normal}(0, 3) \\
+\beta_k \sim \ &\text{Normal}(0, 10 \ \text{SD}(\text{sizediff})^{-1}) \\
+\kappa_k \sim \ &\text{Unif}(0.2, 1) \\
+\\
+\varepsilon_{\text{bird},b} \sim \ &\text{Normal}(0, \sigma_{\text{bird},k[b]}) \\
+\varepsilon_{\text{plant},p} \sim \ &\text{Normal}(0, \sigma_{\text{plant}}) \\
+\\
+\sigma_{\text{bird},k} \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty) \\
+\sigma_{\text{plant}} \sim \ &\text{Normal}(0, 3)\ \text{T}(0, \infty). \\
+\end{aligned}
+$$
+Here, $\text{y}_i \in \{0, 1 \}$ indicated whether each pair of bird-plant species had the consumption rate recorded in their corresponding study.  
+  
+In both models, the posterior distribution showed negligible influence from the prior.  
+We assessed model fit by computing randomized cumulative probability residuals (Dunn and Smyth 1996), using the DHARMa R package (Hartig 2022; Fig. A1). Both models showed adequate fit to data. The negative trend in the residuals for the consumption probability at gulpers for high size difference was influenced by too few observations, so we preferred to keep the logit-linear model.  
+  
+\newpage
+![](/home/ivan/Insync/Colaboraciones/Redotobaiasu-sama ineteracusionesu/redoto_birdo_sama/figures/residuals_both.png) 
+**Figure A1.** Residuals from the consumption rate and consumption probability models, as a function of explanatory variables. The curves show the prediction from a Beta Generalized Additive Model fitted to residuals, using 19 basis functions apart from the intercept. Under good model fit, these residuals show a Uniform distribution in [0, 1], with no patterns as a function of predictors.
+\newpage
+  
+## References
+  
+* Dunn, P. K., & Smyth, G. K. (1996). Randomized quantile residuals. Journal of Computational and graphical statistics, 5(3), 236-244.  
+* Hartig, F. (2022). DHARMa: Residual Diagnostics for Hierarchical (Multi-Level / Mixed) Regression Models. R package version 0.4.6, <https://CRAN.R-project.org/package=DHARMa>.  

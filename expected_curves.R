@@ -33,7 +33,7 @@ ggplot() +
         axis.ticks = element_blank(),
         panel.grid = element_blank()) +
   ylab("Consumption rate") +
-  xlab("Size difference (bill - fruit)")
+  xlab("Bill-fruit size difference (mm)")
 
 ggsave("figures/consumption_expected.tiff",
        width = 945, height = round(945 * 0.85), units = "px",

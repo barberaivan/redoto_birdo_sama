@@ -77,6 +77,10 @@ d <- read.csv("dgapes_v1.csv", sep = ";")
 # as masher in only one. Consider it as gulper.
 d$foraging.behaviour[d$bird.sp == "Icterus_pyrrhopterus"] <- "gulper"
 
+summary(d$fruitstime[d$foraging.behaviour == "gulper"])
+
+
+
 # remove data with extreme values, that introduce a bias in the whole distribution
 d$fruitstime %>% sort
 d <- d[d$fruitstime < 100, ]
@@ -110,6 +114,30 @@ d$bird.sp %>% unique %>% length  # 151
 unique(d$plant.bird.sp) %>% length # 669 pairs
 unique(d$source) %>% length # 39 studies
 nrow(d) # 752
+
+a1 <- aggregate(fruitstime ~ bird.sp + foraging.behaviour, d, mean)
+table(a1$foraging.behaviour)
+# (a) Gulpers (b) Mashers
+# 101          50
+
+aggregate(sizediff ~ foraging.behaviour, d, length)
+# foraging.behaviour sizediff
+# 1        (a) Gulpers      508
+# 2        (b) Mashers      244
+
+sum(d$sizediff[d$foraging.behaviour == "(a) Gulpers"] < 0) / sum(d$foraging.behaviour == "(a) Gulpers") * 100
+# 7.87 % (40 / 508)
+sum(d$sizediff[d$foraging.behaviour == "(b) Mashers"] < 0) / sum(d$foraging.behaviour == "(b) Mashers") * 100
+# 18.85 % (46 / 244)
+
+
+summary(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"])
+quantile(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"],
+         probs = seq(0, 1, by = 0.05))
+
+summary(d$fruitstime[d$foraging.behaviour == "(b) Mashers"])
+quantile(d$fruitstime[d$foraging.behaviour == "(b) Mashers"],
+         probs = seq(0, 1, by = 0.05))
 
 # some pairs of species have more than one measurement of consumption rate.
 # View(d[d$plant.bird.sp == "Euterpe_edulis__Ramphastos_vitellinus", ])
@@ -365,11 +393,10 @@ sigmas_mat_pred <- X_group_pred %*% sigma_raneff
 
 mu_raw_logit_pred <- X_group_pred %*% ahat +
                      (X_group_pred * pdata$sizediff) %*% bhat
-mu_raw_logitnorm_pred <- logit_norm_mean(mu_raw_logit_pred,
-                                         sigmas_mat_pred)
-saveRDS(mu_raw_logitnorm_pred, "exports/consumption_rate_pred-mu-samples.rds")
+# mu_raw_logitnorm_pred <- logit_norm_mean(mu_raw_logit_pred,
+#                                          sigmas_mat_pred)
+# saveRDS(mu_raw_logitnorm_pred, "exports/consumption_rate_pred-mu-samples.rds")
 mu_raw_logitnorm_pred <- readRDS("exports/consumption_rate_pred-mu-samples.rds")
-
 
 mu_pred <- mu_raw_logitnorm_pred * (X_group_pred %*% uhat)
 
@@ -475,3 +502,13 @@ pgt0 <- apply(samples_full, 2, function(x) sum(x > 0) / length(x))
 coef_table <- cbind(summ1[, 1], summ2, pgt0 = pgt0, summ1[, -1])
 write.csv(coef_table, "exports/consumption_rate_table_summary.csv",
           row.names = F)
+
+# Exports for plotting ---------------------------------------------------
+
+plot_list <- list(
+  pdata = pdata,
+  dagg = dagg,
+  dens_data = dens_data,
+  data = d
+)
+saveRDS(plot_list, "exports/consumption_rate_plot_list.rds")
