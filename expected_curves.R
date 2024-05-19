@@ -1,6 +1,22 @@
 library(tidyverse)
 library(viridis)
-theme_set(theme_light())
+theme_set(theme_classic())
+
+nice_theme <- function() {
+  theme(
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major =  element_line(),
+
+    axis.line = element_line(linewidth = 0.35),
+
+    axis.text = element_text(size = 9),
+    axis.title = element_text(size = 11),
+
+    strip.text = element_text(size = 11),
+    strip.background = element_rect(fill = "white", color = "white")
+  )
+}
 
 dtext <- data.frame(
   x = c(1.3, 1.3),
@@ -21,17 +37,15 @@ ggplot() +
   geom_function(fun = function(x) plogis(2 + 1.5 * x) * 0.7, xlim = c(-1.8, 2),
                 color = viridis(1, begin = 0.5)) +
   geom_text(data = dtext, mapping = aes(x, y, label = name, color = name),
-            size = 3.5) +
+            size = 9 /.pt) +
   scale_color_viridis(discrete = TRUE, end = 0.5) +
   geom_text(data = dtext2, mapping = aes(x, y, label = name), alpha = 0.7,
-            size = 3) +
-  # scale_x_continuous(breaks = c(0)) +
+            size = 8 /.pt) +
   scale_y_continuous(limits = c(0, 1.2), expand = c(0.005, 0.005)) +
-  theme_light() +
+  nice_theme() +
   theme(legend.position = "none",
         axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        panel.grid = element_blank()) +
+        axis.ticks = element_blank()) +
   ylab("Consumption rate") +
   xlab("Bill-fruit size difference (mm)")
 

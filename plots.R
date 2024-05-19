@@ -76,9 +76,9 @@ prate <-
   geom_point(aes(sizediff, fruitstime), data = dagg1, inherit.aes = F,
              alpha = 0.4, size = 1.8) +
   geom_text(aes(x, y, label = lab), data = text1, inherit.aes = F,
-            size = 4) +
+            size = 11/.pt) +
   geom_text(aes(x, y, label = name), data = text_diff, inherit.aes = F,
-            alpha = 0.7, size = 3.3) +
+            alpha = 0.7, size = 10/.pt) +
   facet_wrap(vars(foraging.behaviour), axes = "all") +
   nice_theme() +
   ylab("Consumption rate (fruits / min)") +
@@ -103,7 +103,7 @@ pprob <-
   geom_point(aes(sizediff, cons_bin), data = dagg2, inherit.aes = F,
              alpha = 0.4, size = 1.8) +
   geom_text(aes(x, y, label = lab), data = text2, inherit.aes = F,
-            size = 4) +
+            size = 11/.pt) +
   facet_wrap(vars(foraging.behaviour), axes = "all") +
   nice_theme() +
   ylab("Consumption probability") +
