@@ -110,6 +110,11 @@ nrow(d) # 719
 # some pairs of species have more than one measurement of consumption rate.
 # View(d[d$plant.bird.sp == "Euterpe_edulis__Ramphastos_vitellinus", ])
 
+t1 <- table(d$source)
+t1 <- t1[order(t1, decreasing = T)]
+t1rel <- t1 / sum(t1)
+cumsum(t1rel)
+
 # What if we assign zero consumption to bird-plant pairs recorded in the
 # same study for which there are no pairs?
 sources <- levels(d$source)
@@ -165,6 +170,27 @@ dbin$plant.bird.sp <- factor(dbin$plant.bird.sp,
 dbin$source <- factor(dbin$source, levels = levels(d$source))
 dbin$foraging.behaviour <- factor(dbin$foraging.behaviour,
                                   levels = levels(d$foraging.behaviour))
+
+# full data set
+t2 <- table(dbin$source)
+t2 <- t2[order(t2, decreasing = T)]
+plot(t2)
+head(t2)
+t2rel <- t2 / sum(t2)
+barplot(t2rel)
+barplot(cumsum(t2rel))
+
+# pseudo-absences
+t2 <- table(dbin$source[dbin$cons_bin == 0])
+t2 <- t2[order(t2, decreasing = T)]
+plot(t2)
+head(t2)
+t2rel <- t2 / sum(t2)
+barplot(t2rel)
+barplot(cumsum(t2rel))
+
+cumsum(t2)
+cumsum(t2rel)
 
 # Bayesian model ---------------------------------------------------------
 

@@ -62,7 +62,7 @@ $$
 Here, $\text{y}_i \in \{0, 1 \}$ indicated whether each pair of bird-plant species had the consumption rate recorded in their corresponding study.  
   
 In both models, the posterior distribution showed negligible influence from the prior.  
-We assessed model fit by computing randomized cumulative probability residuals (Dunn and Smyth 1996), using the DHARMa R package (Hartig 2022; Fig. A1). Both models showed adequate fit to data. The negative trend in the residuals for the consumption probability at gulpers for high size difference was influenced by too few observations, so we preferred to keep the logit-linear model.  
+We assessed model fit by computing randomized cumulative probability residuals (Dunn and Smyth 1996), using the DHARMa R package (Hartig 2022; Fig. A1). Both models showed adequate fit to data. Residuals for the consumption probability model in mashers at high size difference showed a negative trend, but as it was influenced by too few observations, we preferred to keep the logit-linear model.  
   
 \newpage
 ![](/home/ivan/Insync/Colaboraciones/Redotobaiasu-sama ineteracusionesu/redoto_birdo_sama/figures/residuals_both.png) 
