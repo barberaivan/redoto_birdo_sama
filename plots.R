@@ -51,8 +51,10 @@ data2 = l2$data
 
 # Predictions -------------------------------------------------------------
 
+ytop = 22
+
 text1 <- data.frame(x = -18,
-                    y = 20 * 0.92,
+                    y = ytop * (1 - 1 / ytop),
                     lab = c("(a)", "(b)"),
                     foraging.behaviour = c("Gulpers", "Mashers"))
 
@@ -63,7 +65,7 @@ text_diff <- data.frame(
   foraging.behaviour = "Mashers"
 )
 
-ytop = 20
+
 
 prate <-
   ggplot(pdata1, aes(sizediff, mu, ymin = mu_lower, ymax = mu_upper)) +
@@ -81,6 +83,7 @@ prate <-
             alpha = 0.7, size = 10/.pt) +
   facet_wrap(vars(foraging.behaviour), axes = "all") +
   nice_theme() +
+  theme(axis.title.x = element_blank()) +
   ylab("Consumption rate (fruits / min)") +
   scale_y_continuous(limits = c(0, ytop),
                      expand = c(0.01, 0.01)) +
@@ -88,7 +91,7 @@ prate <-
 prate
 
 text2 <- data.frame(x = -18,
-                    y = 1 * 0.92,
+                    y = 1 * (1 - 1 / ytop),
                     lab = c("(c)", "(d)"),
                     foraging.behaviour = c("Gulpers", "Mashers"))
 
@@ -106,6 +109,8 @@ pprob <-
             size = 11/.pt) +
   facet_wrap(vars(foraging.behaviour), axes = "all") +
   nice_theme() +
+  theme(strip.background = element_blank(),
+        strip.text = element_blank()) +
   ylab("Consumption probability") +
   xlab("Bill-fruit size difference (mm)") +
   scale_y_continuous(limits = c(0, 1),

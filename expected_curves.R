@@ -37,19 +37,19 @@ ggplot() +
   geom_function(fun = function(x) plogis(2 + 1.5 * x) * 0.7, xlim = c(-1.8, 2),
                 color = viridis(1, begin = 0.5)) +
   geom_text(data = dtext, mapping = aes(x, y, label = name, color = name),
-            size = 9 /.pt) +
+            size = 10 /.pt) +
   scale_color_viridis(discrete = TRUE, end = 0.5) +
   geom_text(data = dtext2, mapping = aes(x, y, label = name), alpha = 0.7,
-            size = 8 /.pt) +
+            size = 9 /.pt) +
   scale_y_continuous(limits = c(0, 1.2), expand = c(0.005, 0.005)) +
   nice_theme() +
   theme(legend.position = "none",
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
   ylab("Consumption rate") +
-  xlab("Bill-fruit size difference (mm)")
+  xlab("Bill-fruit size difference")
 
-ggsave("figures/consumption_expected.tiff",
+ggsave("figures/expected_curves.tiff",
        width = 945, height = round(945 * 0.85), units = "px",
        dpi = 300)
 

@@ -1,4 +1,3 @@
-
 # Packages ----------------------------------------------------------------
 
 library(tidyverse)
@@ -79,12 +78,6 @@ d$foraging.behaviour[d$bird.sp == "Icterus_pyrrhopterus"] <- "gulper"
 
 summary(d$fruitstime[d$foraging.behaviour == "gulper"])
 
-
-
-# remove data with extreme values, that introduce a bias in the whole distribution
-d$fruitstime %>% sort
-d <- d[d$fruitstime < 100, ]
-
 #  remove NAs
 d <- d[complete.cases(d[, c("foraging.behaviour", "fruitstime",
                             "gape.width", "frdiam",
@@ -111,9 +104,9 @@ d$foraging.behaviour <- factor(d$foraging.behaviour,
 # Count Ns
 d$plant.sp %>% unique %>% length # 89
 d$bird.sp %>% unique %>% length  # 151
-unique(d$plant.bird.sp) %>% length # 669 pairs
+unique(d$plant.bird.sp) %>% length # 670 pairs
 unique(d$source) %>% length # 39 studies
-nrow(d) # 752
+nrow(d) # 754
 
 a1 <- aggregate(fruitstime ~ bird.sp + foraging.behaviour, d, mean)
 table(a1$foraging.behaviour)
@@ -125,15 +118,19 @@ aggregate(sizediff ~ foraging.behaviour, d, length)
 # 1        (a) Gulpers      508
 # 2        (b) Mashers      244
 
-sum(d$sizediff[d$foraging.behaviour == "(a) Gulpers"] < 0) / sum(d$foraging.behaviour == "(a) Gulpers") * 100
-# 7.87 % (40 / 508)
-sum(d$sizediff[d$foraging.behaviour == "(b) Mashers"] < 0) / sum(d$foraging.behaviour == "(b) Mashers") * 100
+sum(d$sizediff[d$foraging.behaviour == "(a) Gulpers"] < 0) /
+  sum(d$foraging.behaviour == "(a) Gulpers") * 100
+# 7.84 % (40 / 510)
+sum(d$sizediff[d$foraging.behaviour == "(b) Mashers"] < 0) /
+  sum(d$foraging.behaviour == "(b) Mashers") * 100
 # 18.85 % (46 / 244)
-
 
 summary(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"])
 quantile(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"],
          probs = seq(0, 1, by = 0.05))
+sort(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"])
+plot(ecdf(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"]))
+
 
 summary(d$fruitstime[d$foraging.behaviour == "(b) Mashers"])
 quantile(d$fruitstime[d$foraging.behaviour == "(b) Mashers"],
@@ -149,17 +146,6 @@ tsource <- table(d$source) %>% sort
 barplot(sort(tbird)); abline(h = 1, col = "red")
 barplot(sort(tplant)); abline(h = 1, col = "red")
 barplot(sort(tsource)); abline(h = 1, col = "red")
-
-
-# incluir los que tienen pocos datos, infla la varianza??
-library(lme4)
-gg1 <- glmer(fruitstime ~ 1 + (1 | bird.sp), data = d, family = Gamma(link = "log"))
-filter <- d$bird.sp %in% names(tbird)[tbird > 2]
-gg2 <- glmer(fruitstime ~ 1 + (1 | bird.sp), data = d[filter, ],
-             family = Gamma(link = "log"))
-
-summary(gg1)
-summary(gg2)
 
 # Prior predictive check --------------------------------------------------
 
@@ -245,12 +231,12 @@ mr1 <- sampling(
 saveRDS(mr1, "exports/consumption_rate_model.rds")
 mr1 <- readRDS("exports/consumption_rate_model.rds")
 
-pairs(mr1, pars = c("u", "a", "b"))
-pairs(mr1, pars = c("phi", "sigma_bird", "sigma_plant", "sigma_source"))
+# pairs(mr1, pars = c("u", "a", "b")) # hard to identify alpha and u
+# pairs(mr1, pars = c("phi", "sigma_bird", "sigma_plant", "sigma_source"))
 
 sm1 <- summary(mr1)[[1]]
-min(sm1[, "n_eff"]) # 2629.995 con upper 30
-max(sm1[, "Rhat"])  # 1.002377
+min(sm1[, "n_eff"]) # 3045.712
+max(sm1[, "Rhat"])  # 1.003287
 
 # Extract parameters --------------------------------------------------
 
@@ -344,10 +330,6 @@ ggplot(d, aes(sizediff, res)) +
         strip.background = element_rect(fill = "white", color = "white"),
         strip.text = element_text(size = 10))
 
-ggsave("figures/consumption_rate_residuals_conditional.tiff",
-       width = 1961, height = round(1961 * 0.55), units = "px",
-       dpi = 300)
-
 # unconditional: largely underestimated, no matter whether hierarchy is considered or not
 # conditional: perfect.
 
@@ -432,7 +414,7 @@ dens_data <- rbind(
 dens_data$foraging.behaviour <- factor(dens_data$foraging.behaviour,
                                        levels = c("(a) Gulpers", "(b) Mashers"))
 
-ytop <- 20
+ytop <- 22
 dens_data$dens_scaled <- dens_data$dens * ytop * 0.9 / max(dens_data$dens)
 viri_op <- "C"
 
@@ -455,14 +437,6 @@ ggplot(pdata, aes(sizediff, mu, ymin = mu_lower, ymax = mu_upper)) +
   scale_y_continuous(limits = c(0, ytop),
                      expand = c(0.01, 0.01))
 
-ggsave("figures/consumption_rate_predictions.tiff",
-       width = 1961, height = round(1961 * 0.55), units = "px",
-       dpi = 300)
-
-# Width: 945 (single column), 1476 (1.5 column) or 1961 (double column) pixels
-# (at 300 dpi). Resolution: 300-600 dpi.
-# Size: <50 MB (for exceptions on file size, see below).
-
 # R2 ----------------------------------------------------------------------
 
 # for gulpers (1) and mashers (2)
@@ -479,8 +453,8 @@ sigma_mat <- X_group %*% sigma_raneff
 
 # mu without variation among raneffs
 mu_raw_logit <- X_group %*% ahat + (X_group * d$sizediff) %*% bhat
-mu_raw_logitnorm <- logit_norm_mean(mu_raw_logit, sigma_mat)
-saveRDS(mu_raw_logitnorm, "exports/consumption_rate_pred-mu-samples.rds")
+# mu_raw_logitnorm <- logit_norm_mean(mu_raw_logit, sigma_mat)
+# saveRDS(mu_raw_logitnorm, "exports/consumption_rate_pred-mu-samples.rds")
 mu_raw_logitnorm <- readRDS("exports/consumption_rate_pred-mu-samples.rds")
 mu_sim <- mu_raw_logitnorm * upper_mat
 
