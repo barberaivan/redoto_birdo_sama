@@ -41,15 +41,21 @@ ggplot() +
   scale_color_viridis(discrete = TRUE, end = 0.5) +
   geom_text(data = dtext2, mapping = aes(x, y, label = name), alpha = 0.7,
             size = 9 /.pt) +
-  scale_y_continuous(limits = c(0, 1.2), expand = c(0.005, 0.005)) +
+  scale_y_continuous(limits = c(0, 1.5), expand = c(0.005, 0.005)) +
   nice_theme() +
   theme(legend.position = "none",
         axis.text = element_blank(),
         axis.ticks = element_blank()) +
-  ylab("Consumption rate") +
+  ylab("Consumption rate [fruits / min] or\nconsumption probability") +
   xlab("Bill-fruit size difference")
 
 ggsave("figures/expected_curves.tiff",
+       width = 945, height = round(945 * 0.85), units = "px",
+       dpi = 300)
+ggsave("figures/expected_curves.png",
+       width = 945, height = round(945 * 0.85), units = "px",
+       dpi = 300)
+ggsave("figures/expected_curves.pdf",
        width = 945, height = round(945 * 0.85), units = "px",
        dpi = 300)
 

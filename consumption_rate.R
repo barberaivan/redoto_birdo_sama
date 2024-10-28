@@ -70,9 +70,10 @@ map_hdi <- function(x, ci = 0.95) {
 
 # Prepare data ------------------------------------------------------------
 
-d <- read.csv("dgapes_v1.csv", sep = ";")
+# Consumption rate data
+d <- read.csv("data/dgapes_v1.csv", sep = ",")
 
-# ammend one error. Icterus_pyrrhopterus appear as gulper in three sources and
+# amend one error. Icterus_pyrrhopterus appear as gulper in three sources and
 # as masher in only one. Consider it as gulper.
 d$foraging.behaviour[d$bird.sp == "Icterus_pyrrhopterus"] <- "gulper"
 
@@ -87,43 +88,43 @@ d$sizediff <- d$gape.width - d$frdiam
 d$masstime <- d$fruitstime / d$frmass
 
 # nrow(d)
-# sum(is.na(d$frmass)) / nrow(d) # many NA in fruitmass, 12 %
+# sum(is.na(d$frmass)) / nrow(d) # many NA in fruitmass, 20 %
 
 # unique plant-bird interactions
 d$plant.bird.sp <- paste(d$plant.sp, d$bird.sp, sep = "__")
 
 # make factors
-d$plant.sp <- factor(d$plant.sp, levels = unique(d$plant.sp))
-d$bird.sp <- factor(d$bird.sp, levels = unique(d$bird.sp))
-d$plant.bird.sp <- factor(d$plant.bird.sp, levels = unique(d$plant.bird.sp))
-d$source <- factor(d$source, levels = unique(d$source))
+d$plant.sp <- factor(d$plant.sp, levels = sort(unique(d$plant.sp)))
+d$bird.sp <- factor(d$bird.sp, levels = sort(unique(d$bird.sp)))
+d$plant.bird.sp <- factor(d$plant.bird.sp, levels = sort(unique(d$plant.bird.sp)))
+d$source <- factor(d$source, levels = sort(unique(d$source)))
 d$foraging.behaviour <- factor(d$foraging.behaviour,
                                levels = c("gulper", "masher"),
                                labels = c("(a) Gulpers", "(b) Mashers"))
 
 # Count Ns
-d$plant.sp %>% unique %>% length # 89
-d$bird.sp %>% unique %>% length  # 151
-unique(d$plant.bird.sp) %>% length # 670 pairs
-unique(d$source) %>% length # 39 studies
-nrow(d) # 754
+d$plant.sp %>% unique %>% length # 94
+d$bird.sp %>% unique %>% length  # 158
+unique(d$plant.bird.sp) %>% length # 735 pairs
+unique(d$source) %>% length # 41 studies
+nrow(d) # 819
 
 a1 <- aggregate(fruitstime ~ bird.sp + foraging.behaviour, d, mean)
 table(a1$foraging.behaviour)
 # (a) Gulpers (b) Mashers
-# 101          50
+# 107          51
 
 aggregate(sizediff ~ foraging.behaviour, d, length)
 # foraging.behaviour sizediff
-# 1        (a) Gulpers      508
-# 2        (b) Mashers      244
+# 1        (a) Gulpers      549
+# 2        (b) Mashers      270
 
 sum(d$sizediff[d$foraging.behaviour == "(a) Gulpers"] < 0) /
   sum(d$foraging.behaviour == "(a) Gulpers") * 100
-# 7.84 % (40 / 510)
+# 7.83 % (43 / 549)
 sum(d$sizediff[d$foraging.behaviour == "(b) Mashers"] < 0) /
   sum(d$foraging.behaviour == "(b) Mashers") * 100
-# 18.85 % (46 / 244)
+# 18.15 % (49 / 270)
 
 summary(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"])
 quantile(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"],
@@ -135,7 +136,7 @@ plot(ecdf(d$fruitstime[d$foraging.behaviour == "(a) Gulpers"]))
 summary(d$fruitstime[d$foraging.behaviour == "(b) Mashers"])
 quantile(d$fruitstime[d$foraging.behaviour == "(b) Mashers"],
          probs = seq(0, 1, by = 0.05))
-
+plot(ecdf(d$fruitstime[d$foraging.behaviour == "(b) Mashers"]))
 # some pairs of species have more than one measurement of consumption rate.
 # View(d[d$plant.bird.sp == "Euterpe_edulis__Ramphastos_vitellinus", ])
 
@@ -146,6 +147,28 @@ tsource <- table(d$source) %>% sort
 barplot(sort(tbird)); abline(h = 1, col = "red")
 barplot(sort(tplant)); abline(h = 1, col = "red")
 barplot(sort(tsource)); abline(h = 1, col = "red")
+
+# Density plots for bill and fruit size ------------------------------------
+
+a <- distinct(d, frdiam) # took the unique values to avoid repeated species
+a$org <- rep("plant", length(a$frdiam)) #add the type of organism
+
+b <- distinct(d, gape.width, .keep_all=TRUE) #same for birds
+b <- b[, c(4,6)] #keep only the gape width value and the handling behaviour
+b$foraging.behaviour <- as.character(b$foraging.behaviour)
+
+colnames(b) <- c("org", "frdiam")
+bbb <- rbind(a, b) # merge both data frames.
+
+# density plot
+colcol <- c(
+  viridis(2, end = 0.5), # used in expected curves plot
+  viridis(1, end = 0.95, direction = -1)
+)
+
+ggplot(bbb, aes(x=frdiam, fill= org)) +
+  geom_density(alpha=.35, bounds = c(0, Inf), adjust = 2)+
+  scale_fill_manual(values = colcol)+ theme_bw()
 
 # Prior predictive check --------------------------------------------------
 
@@ -185,9 +208,6 @@ prior_phi_sd <- 10
 
 # Bayesian model -------------------------------------------------------------
 
-# compile the stan model
-smodel <- stan_model("consumption_rate.stan", verbose = F) # use this
-
 d$behav_num <- as.numeric(d$foraging.behaviour)
 d$plant_num <- as.numeric(d$plant.sp)
 d$bird_num <- as.numeric(d$bird.sp)
@@ -218,8 +238,11 @@ sdata <- list(
   prior_phi_sd = 3,
   prior_sigma_sd = 3,
   lower_u = 1,
-  upper_u = 30#quantile(d$fruitstime, 0.95)
+  upper_u = 30 #quantile(d$fruitstime, 0.95)
 )
+
+# compile the stan model
+smodel <- stan_model("consumption_rate.stan", verbose = F) # use this
 
 # sample the posterior
 mr1 <- sampling(
@@ -235,8 +258,8 @@ mr1 <- readRDS("exports/consumption_rate_model.rds")
 # pairs(mr1, pars = c("phi", "sigma_bird", "sigma_plant", "sigma_source"))
 
 sm1 <- summary(mr1)[[1]]
-min(sm1[, "n_eff"]) # 3045.712
-max(sm1[, "Rhat"])  # 1.003287
+min(sm1[, "n_eff"]) # 3840.65
+max(sm1[, "Rhat"])  # 1.001953
 
 # Extract parameters --------------------------------------------------
 
@@ -453,9 +476,9 @@ sigma_mat <- X_group %*% sigma_raneff
 
 # mu without variation among raneffs
 mu_raw_logit <- X_group %*% ahat + (X_group * d$sizediff) %*% bhat
-# mu_raw_logitnorm <- logit_norm_mean(mu_raw_logit, sigma_mat)
-# saveRDS(mu_raw_logitnorm, "exports/consumption_rate_pred-mu-samples.rds")
-mu_raw_logitnorm <- readRDS("exports/consumption_rate_pred-mu-samples.rds")
+mu_raw_logitnorm <- logit_norm_mean(mu_raw_logit, sigma_mat)
+# saveRDS(mu_raw_logitnorm, "exports/consumption_rate_fitted-mu-samples.rds")
+# mu_raw_logitnorm <- readRDS("exports/consumption_rate_fitted-mu-samples.rds")
 mu_sim <- mu_raw_logitnorm * upper_mat
 
 var_y <- mu_sim ^ 2 * phi_mat

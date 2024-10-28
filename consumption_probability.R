@@ -71,7 +71,7 @@ map_hdi <- function(x, ci = 0.95) {
 
 # Prepare data ------------------------------------------------------------
 
-d <- read.csv("dgapes_v1.csv", sep = ";")
+d <- read.csv("data/dgapes_v1.csv", sep = ",")
 
 # amend an error. Icterus_pyrrhopterus appear as gulper in three sources and
 # as masher in only one. Consider it as gulper.
@@ -92,31 +92,16 @@ d$masstime <- d$fruitstime / d$frmass
 d$plant.bird.sp <- paste(d$plant.sp, d$bird.sp, sep = "__")
 
 # make factors
-d$plant.sp <- factor(d$plant.sp, levels = unique(d$plant.sp))
-d$bird.sp <- factor(d$bird.sp, levels = unique(d$bird.sp))
-d$plant.bird.sp <- factor(d$plant.bird.sp, levels = unique(d$plant.bird.sp))
-d$source <- factor(d$source, levels = unique(d$source))
+d$plant.sp <- factor(d$plant.sp, levels = sort(unique(d$plant.sp)))
+d$bird.sp <- factor(d$bird.sp, levels = sort(unique(d$bird.sp)))
+d$plant.bird.sp <- factor(d$plant.bird.sp, levels = sort(unique(d$plant.bird.sp)))
+d$source <- factor(d$source, levels = sort(unique(d$source)))
 d$foraging.behaviour <- factor(d$foraging.behaviour,
                                levels = c("gulper", "masher"),
                                labels = c("(a) Gulpers", "(b) Mashers"))
 
-# Count Ns
-d$plant.sp %>% unique %>% length # 89
-d$bird.sp %>% unique %>% length  # 145
-unique(d$plant.bird.sp) %>% length # 637 pairs
-unique(d$source) %>% length # 39 studies
-nrow(d) # 719
-
-# some pairs of species have more than one measurement of consumption rate.
-# View(d[d$plant.bird.sp == "Euterpe_edulis__Ramphastos_vitellinus", ])
-
-t1 <- table(d$source)
-t1 <- t1[order(t1, decreasing = T)]
-t1rel <- t1 / sum(t1)
-cumsum(t1rel)
-
-# What if we assign zero consumption to bird-plant pairs recorded in the
-# same study for which there are no pairs?
+# Assign zero consumption to bird-plant pairs recorded in the
+# same study for which there are no pairs
 sources <- levels(d$source)
 
 # What if we create those non-interacting pairs?
@@ -150,7 +135,7 @@ dcombs <- do.call("rbind", lapply(1:length(sources), function(s) {
 
 tcombs <- dcombs$source %>% table
 # plot(tcombs)
-# Gondim, bledinger y Correia son casi los únicos que aportan datos extra.
+# Gondim, Bledinger, and Correia provide most of the extra data.
 
 # merge with observed data
 cols <- c("foraging.behaviour", "fruitstime",
@@ -161,7 +146,7 @@ cols <- c("foraging.behaviour", "fruitstime",
 dbin <- rbind(d[, cols], dcombs[, cols])
 dbin$cons_bin <- as.numeric(dbin$fruitstime > 0)
 dbin$cons_fac <- factor(as.character(dbin$cons_bin), levels = c("0", "1"),
-                        labels = c("consumed", "not consumed"))
+                        labels = c("not consumed", "consumed"))
 
 dbin$plant.sp <- factor(dbin$plant.sp, levels = levels(d$plant.sp))
 dbin$bird.sp <- factor(dbin$bird.sp, levels = levels(d$bird.sp))
@@ -191,6 +176,12 @@ barplot(cumsum(t2rel))
 
 cumsum(t2)
 cumsum(t2rel)
+
+table(dbin$cons_fac)
+table(dbin$cons_fac) / sum(table(dbin$cons_fac))
+# consumed not consumed
+# 1931          819
+# 0.7021818    0.2978182
 
 # Bayesian model ---------------------------------------------------------
 
@@ -238,8 +229,8 @@ pairs(mp1, pars = c("b", "a", "u"))
 pairs(mp1, pars = c("sigma_plant", "sigma_bird", "u"))
 
 sm1 <- summary(mp1)[[1]]
-min(sm1[, "n_eff"]) # 1172.925
-max(sm1[, "Rhat"])  # 1.00753
+min(sm1[, "n_eff"]) # 1311.913
+max(sm1[, "Rhat"])  # 1.003925
 
 # Extract parameters --------------------------------------------------
 
@@ -345,7 +336,6 @@ ggplot(dbin, aes(sizediff, res)) +
 ggsave("figures/consumption_probability_residuals_conditional.tiff",
        width = 1961, height = round(1961 * 0.55), units = "px",
        dpi = 300)
-
 
 # unconditional: largely underestimated, no matter whether hierarchy is considered or not
 # conditional: perfect.
